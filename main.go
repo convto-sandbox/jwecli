@@ -24,10 +24,14 @@ var (
 )
 
 func init() {
-	flag.BoolVar(&help, "h", false, "Print help")
-	flag.StringVar(&payload, "p", "", "Payload")
-	flag.StringVar(&plainKeyAlg, "ka", "", "Key encryption algorithm. supports:\n	RSA1_5\n	RSA_OAEP\n	RSA_OAEP_256\n	ECDH_ES_A128KW\n	ECDH_ES_A102KW\n	ECDH_ES_A256KW")
-	flag.StringVar(&plainConAlg, "ca", "", "Content encryption algorithm. supports:\n	A128CBC_HS256")
+	flag.BoolVar(&help, "-help", false, "Print help")
+	flag.BoolVar(&help, "h", false, "Shorthand help")
+	flag.StringVar(&payload, "-payload", "", "Payload")
+	flag.StringVar(&payload, "p", "", "Shorthand payload")
+	flag.StringVar(&plainKeyAlg, "-key-alg", "", "Key encryption algorithm. supports:\n  RSA1_5\n  RSA_OAEP\n  RSA_OAEP_256\n  ECDH_ES_A128KW\n  ECDH_ES_A102KW\n  ECDH_ES_A256KW")
+	flag.StringVar(&plainKeyAlg, "ka", "", "Shorthand key-alg")
+	flag.StringVar(&plainConAlg, "-content-alg", "", "Content encryption algorithm. supports:\n  A128CBC_HS256")
+	flag.StringVar(&plainConAlg, "ca", "", "Shorthand content-alg")
 }
 
 func parseKeyAlg(plainKeyAlg string) (jwa.KeyEncryptionAlgorithm, error) {
@@ -83,7 +87,7 @@ func main() {
 	}
 
 	if payload == "" || plainKeyAlg == "" || plainConAlg == "" {
-		fmt.Println("-p and -ka and -ca is required")
+		fmt.Println("-p and -ka and -ca is required.\nplease check `jwtcli -h`.")
 		os.Exit(1)
 	}
 
