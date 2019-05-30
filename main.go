@@ -51,14 +51,14 @@ func parseKeyAlg(plainKeyAlg string) (jwa.KeyEncryptionAlgorithm, error) {
 
 func genKey(keyAlg jwa.KeyEncryptionAlgorithm) (interface{}, error) {
 	switch keyAlg {
-	case "RSA1_5", "RSA_OAEP", "RSA_OAEP_256":
+	case jwa.RSA1_5, jwa.RSA_OAEP, jwa.RSA_OAEP_256:
 		privKey, err := rsa.GenerateKey(rand.Reader, 2048)
 		if err != nil {
 			fmt.Printf("failed to getenerate rsa private key: %s\n", err)
 			return nil, err
 		}
 		return &privKey.PublicKey, nil
-	case "ECDH_ES_A128KW", "ECDH_ES_A192KW", "ECDH_ES_A256KW":
+	case jwa.ECDH_ES_A128KW, jwa.ECDH_ES_A192KW, jwa.ECDH_ES_A256KW:
 		privKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 		if err != nil {
 			fmt.Printf("failed to generate ecdh private key: %s", err)
