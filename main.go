@@ -1,31 +1,111 @@
 package main
 
 import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/rsa"
+	"errors"
+	"flag"
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/lestrrat-go/jwx/jwa"
 	"github.com/lestrrat-go/jwx/jwe"
 )
 
+var (
+	help        bool
+	payload     string
+	plainKeyAlg string
+	plainConAlg string
+)
+
+func init() {
+	flag.BoolVar(&help, "h", false, "Print help")
+	flag.StringVar(&payload, "p", "", "Payload")
+	flag.StringVar(&plainKeyAlg, "ka", "", "Key encryption algorithm. supports:\n	RSA1_5\n	RSA_OAEP\n	RSA_OAEP_256\n	ECDH_ES_A128KW\n	ECDH_ES_A102KW\n	ECDH_ES_A256KW")
+	flag.StringVar(&plainConAlg, "ca", "", "Content encryption algorithm. supports:\n	A128CBC_HS256")
+}
+
+func parseKeyAlg(plainKeyAlg string) (jwa.KeyEncryptionAlgorithm, error) {
+	switch strings.ToUpper(plainKeyAlg) {
+	case "RSA1_5":
+		return jwa.RSA1_5, nil
+	case "RSA_OAEP":
+		return jwa.RSA_OAEP, nil
+	case "RSA_OAEP_256":
+		return jwa.RSA_OAEP_256, nil
+	case "ECDH_ES_A128KW":
+		return jwa.ECDH_ES_A128KW, nil
+	case "ECDH_ES_A192KW":
+		return jwa.ECDH_ES_A192KW, nil
+	case "ECDH_ES_A256KW":
+		return jwa.ECDH_ES_A256KW, nil
+	default:
+		return "", errors.New(fmt.Sprintf("not support atgorithm. %s", plainKeyAlg))
+	}
+}
+
+func genKey(keyAlg jwa.KeyEncryptionAlgorithm) (interface{}, error) {
+	switch keyAlg {
+	case "RSA1_5", "RSA_OAEP", "RSA_OAEP_256":
+		privKey, err := rsa.GenerateKey(rand.Reader, 2048)
+		if err != nil {
+			fmt.Printf("failed to getenerate rsa private key: %s\n", err)
+			return nil, err
+		}
+		return &privKey.PublicKey, nil
+	case "ECDH_ES_A128KW", "ECDH_ES_A192KW", "ECDH_ES_A256KW":
+		privKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+		if err != nil {
+			fmt.Printf("failed to generate ecdh private key: %s", err)
+			return nil, err
+		}
+		return &privKey.PublicKey, nil
+	default:
+		return nil, errors.New(fmt.Sprintf("not support atgorithm. %s", keyAlg))
+	}
+}
+
+func parseConAlg(plainConAlg string) (jwa.ContentEncryptionAlgorithm, error) {
+	return jwa.A128CBC_HS256, nil
+}
+
 func main() {
-	args := os.Args
-	if len(args) != 2 {
-		fmt.Println("payloadは必須です。また、payloadは一つのみ設定してください")
-		return
-	}
-	payload := []byte(args[1])
+	flag.Parse()
 
-	privkey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if help {
+		flag.Usage()
+		os.Exit(0)
+	}
+
+	if payload == "" || plainKeyAlg == "" || plainConAlg == "" {
+		fmt.Println("-p and -ka and -ca is required")
+		os.Exit(1)
+	}
+
+	keyAlg, err := parseKeyAlg(plainKeyAlg)
 	if err != nil {
-		log.Printf("failed to generate private key: %s", err)
-		return
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
-	encrypted, err := jwe.Encrypt(payload, jwa.RSA1_5, &privkey.PublicKey, jwa.A128CBC_HS256, jwa.NoCompress)
+	key, err := genKey(keyAlg)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	conAlg, err := parseConAlg(plainConAlg)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	encrypted, err := jwe.Encrypt([]byte(payload), keyAlg, key, conAlg, jwa.NoCompress)
 	if err != nil {
 		log.Printf("failed to encrypt payload: %s", err)
 		return
