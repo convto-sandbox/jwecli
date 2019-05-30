@@ -24,13 +24,13 @@ var (
 )
 
 func init() {
-	flag.BoolVar(&help, "-help", false, "Print help")
+	flag.BoolVar(&help, "help", false, "Print help")
 	flag.BoolVar(&help, "h", false, "Shorthand help")
-	flag.StringVar(&payload, "-payload", "", "Payload")
+	flag.StringVar(&payload, "payload", "", "Payload")
 	flag.StringVar(&payload, "p", "", "Shorthand payload")
-	flag.StringVar(&plainKeyAlg, "-key-alg", "", "Key encryption algorithm. supports:\n  RSA1_5\n  RSA_OAEP\n  RSA_OAEP_256\n  ECDH_ES_A128KW\n  ECDH_ES_A102KW\n  ECDH_ES_A256KW")
+	flag.StringVar(&plainKeyAlg, "key-alg", "", "Key encryption algorithm. supports:\n  RSA1_5\n  RSA_OAEP\n  RSA_OAEP_256\n  ECDH_ES_A128KW\n  ECDH_ES_A102KW\n  ECDH_ES_A256KW")
 	flag.StringVar(&plainKeyAlg, "ka", "", "Shorthand key-alg")
-	flag.StringVar(&plainConAlg, "-content-alg", "", "Content encryption algorithm. supports:\n  A128CBC_HS256")
+	flag.StringVar(&plainConAlg, "content-alg", "", "Content encryption algorithm. supports:\n  A128CBC_HS256")
 	flag.StringVar(&plainConAlg, "ca", "", "Shorthand content-alg")
 }
 
